@@ -1,0 +1,201 @@
+basePath: /api/v1
+definitions:
+  cluster.KeyValuePair:
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+    type: object
+  cluster.RedisClient:
+    properties:
+      address:
+        type: string
+      role:
+        type: string
+    type: object
+  models.DataRequestContainer:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/cluster.KeyValuePair'
+        type: array
+    type: object
+  models.NewClientRequestContainer:
+    properties:
+      address:
+        description: 'Address : 레디스 노드 주소, IP + Port'
+        type: string
+      master_address:
+        description: 'MasterAddress : Role = "Slave" 일 때 반드시 필요한 옵션 (Role = "Master"
+          일 경우 무시)'
+        type: string
+      role:
+        description: 'Role : "Master" / "Slave"'
+        type: string
+    type: object
+  response.BasicTemplate:
+    properties:
+      message:
+        type: string
+      next_link:
+        $ref: '#/definitions/response.NextLink'
+        type: object
+    type: object
+  response.GetResultTemplate:
+    properties:
+      handled_node:
+        type: string
+      message:
+        type: string
+      next_link:
+        $ref: '#/definitions/response.NextLink'
+        type: object
+      result:
+        type: string
+    type: object
+  response.NextLink:
+    properties:
+      href:
+        type: string
+      message:
+        type: string
+    type: object
+  response.RedisListTemplate:
+    properties:
+      masters:
+        items:
+          $ref: '#/definitions/cluster.RedisClient'
+        type: array
+      message:
+        type: string
+      next_link:
+        $ref: '#/definitions/response.NextLink'
+        type: object
+      slaves:
+        items:
+          $ref: '#/definitions/cluster.RedisClient'
+        type: array
+    type: object
+  response.RedisResult:
+    properties:
+      handled_node:
+        type: string
+      result:
+        type: string
+    type: object
+  response.SetResultTemplate:
+    properties:
+      message:
+        type: string
+      next_link:
+        $ref: '#/definitions/response.NextLink'
+        type: object
+      results:
+        items:
+          $ref: '#/definitions/response.RedisResult'
+        type: array
+    type: object
+host: localhost:8888
+info:
+  contact:
+    email: burgund32@gmail.com
+    name: 김예찬 (Luke Kim)
+  description: |-
+    This service presents group of Redis nodes and the interface of them
+    to test master/slave replication, data persistence, failover redemption
+  license: {}
+  title: Redis-Cluster/Sentinel-Like Server
+  version: "1.1"
+paths:
+  /clients:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.RedisListTemplate'
+        "500":
+          description: 서버 오류
+          schema:
+            $ref: '#/definitions/response.BasicTemplate'
+      summary: Get Currently Registered Master/Slave Redis Clients
+    post:
+      consumes:
+      - application/json
+      description: |-
+        **Slave 추가 시,** 반드시 요청 바디에 **"master_address" 필드에 타겟 노드 주소 설정**
+        Master, Slave 운용하고 싶지 않은 경우, 모두 Master로 등록
+      parameters:
+      - description: Specifying Role and Address of New Node
+        in: body
+        name: newSetData
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewClientRequestContainer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.RedisListTemplate'
+        "500":
+          description: 서버 오류
+          schema:
+            $ref: '#/definitions/response.BasicTemplate'
+      summary: Add New Master/Slave Redis Clients
+  /hash/data:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        ## Key, Value 쌍 저장
+        **기존 값이 존재할 경우 덮어씌워진다**
+      parameters:
+      - description: Multiple Pairs can be set
+        in: body
+        name: newSetData
+        required: true
+        schema:
+          $ref: '#/definitions/models.DataRequestContainer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SetResultTemplate'
+        "500":
+          description: 서버 오류
+          schema:
+            $ref: '#/definitions/response.BasicTemplate'
+      summary: Set new Key, Value Pair
+  /hash/data/{key}:
+    get:
+      consumes:
+      - application/json
+      description: '## 요청한 Key 값에 저장된 Value 값 가져오기'
+      parameters:
+      - description: Target Key
+        in: path
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetResultTemplate'
+        "500":
+          description: 서버 오류
+          schema:
+            $ref: '#/definitions/response.BasicTemplate'
+      summary: Get stored Value with passed Key
+swagger: "2.0"

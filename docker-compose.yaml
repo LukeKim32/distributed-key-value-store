@@ -1,0 +1,173 @@
+version: '3'
+services:
+    proxy_test:
+        build:
+            context : ./
+            dockerfile: ./docker/dockerfiles/proxy/Dockerfile
+        container_name: proxy_hash
+        networks:
+            mynet:
+                ipv4_address: 172.29.0.2
+        ports:
+            - "80:80"
+        working_dir: /usr/share/nginx/html
+        volumes:
+            - react-static:/usr/share/nginx/html
+
+    interface:
+        build:
+            context: ./
+            dockerfile: ./docker/dockerfiles/interface_server/Dockerfile
+        container_name: interface
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.3
+        expose:
+            - "8888"
+        volumes:
+            - ./docker/mount/interface/logs:/app/logs
+            # Path for linux
+            - /var/run/docker.sock:/var/run/docker.sock
+        environment:
+            - GOPATH=/go
+            - DOCKER_HOST_IP=${DOCKER_HOST_IP}
+        links:
+            - redis_one
+            - redis_two
+            - redis_three
+            - redis_slave_one
+            - redis_slave_two
+            - redis_slave_three
+        depends_on:
+            - monitor_one
+            - monitor_two
+    
+    monitor_one:
+        build:
+            context: ./
+            dockerfile: ./docker/dockerfiles/monitor_server/Dockerfile
+        # image : interface-hash-server_monitor_one 
+        container_name: monitor_one
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.10
+        expose:
+            - "8888"
+        restart: always
+        volumes:
+            - ./docker/mount/monitor_one/logs:/app/logs
+        environment:
+            - GOPATH=/go
+        links:
+            - redis_one
+            - redis_two
+            - redis_three
+            - redis_slave_one
+            - redis_slave_two
+            - redis_slave_three
+
+    monitor_two:
+        build:
+            context: ./
+            dockerfile: ./docker/dockerfiles/monitor_server/Dockerfile
+        # image : interface-hash-server_monitor_two
+        container_name: monitor_two
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.11
+        expose:
+            - "8888"
+        restart: always
+        volumes:
+            - ./docker/mount/monitor_two/logs:/app/logs
+        environment:
+            - GOPATH=/go
+        links:
+            - redis_one
+            - redis_two
+            - redis_three
+            - redis_slave_one
+            - redis_slave_two
+            - redis_slave_three
+
+    redis_one:
+        build:
+            context: ./docker/dockerfiles/redis_one/
+        container_name: redis_one
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.4
+        expose:
+            - "8000"
+        volumes:
+            - ./docker/mount/redis_container/redis_one:/data
+        
+    redis_two:
+        build:
+            context: ./docker/dockerfiles/redis_two/
+        container_name: redis_two
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.5
+        expose:
+            - "8001"
+        volumes:
+            - ./docker/mount/redis_container/redis_two:/data
+    
+    redis_three:
+        build:
+            context: ./docker/dockerfiles/redis_three/
+        container_name: redis_three
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.6
+        expose:
+            - "8002"
+        volumes:
+            - ./docker/mount/redis_container/redis_three:/data
+
+    redis_slave_one:
+        build:
+            context: ./docker/dockerfiles/redis_one/
+        container_name: redis_slave_one
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.7
+        expose:
+            - "8000"
+        volumes:
+            - ./docker/mount/redis_container/redis_slave_one:/data
+        
+    redis_slave_two:
+        build:
+            context: ./docker/dockerfiles/redis_two/
+        container_name: redis_slave_two
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.8
+        expose:
+            - "8001"
+        volumes:
+            - ./docker/mount/redis_container/redis_slave_two:/data
+    
+    redis_slave_three:
+        build:
+            context: ./docker/dockerfiles/redis_three/
+        container_name: redis_slave_three
+        networks:
+            mynet:
+                 ipv4_address: 172.29.0.9
+        expose:
+            - "8002"
+        volumes:
+            - ./docker/mount/redis_container/redis_slave_three:/data
+            
+networks:
+  mynet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.0.0/16
+
+volumes:
+  react-static:

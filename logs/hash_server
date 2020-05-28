@@ -1,0 +1,4 @@
+ERROR: 2020/05/18 20:00:27 connection.go:66: 레디스 클라이언트(172.29.0.4:8000) 연결 실패 - dial tcp 172.29.0.4:8000: i/o timeout
+ERROR: 2020/05/18 20:00:27 main.go:49: Error - Node connection error :  dial tcp 172.29.0.4:8000: i/o timeout
+ERROR: 2020/05/24 18:40:57.575052 connection.go:66: 레디스 클라이언트(172.29.0.4:8000) 연결 실패 - dial tcp 172.29.0.4:8000: i/o timeout
+ERROR: 2020/05/24 18:40:57.575893 main.go:44: Error - Node connection error :  dial tcp 172.29.0.4:8000: i/o timeout
