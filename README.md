@@ -1,16 +1,11 @@
-# interface-hash-server
-interface-hash-db is a interface server communicates with Users externally, Redis containers internally at the same time
-tried to *implement Redis-Cluster-like interface server* to study in-memory, hash database
-(Study about Redis will be updated later)
+# Distributed Key Value Store
+This project is a Go-based distributed key value store, using Raft and self-made Redis cluster
 
 ## Features
-
-- "SET", "GET" command used in Redis supported
-- Hash Slot implemented with CRC16 key modulo 16384 (Similar like Redis-Cluster) 
-- Master-Slave Replication
-- Failover Recovery : Slave Dead, Restarts Container / Both Master-Slave dead, Redistribute Data and Hash slots
-- Other Containers (except Proxy) Unreachable (port not binded to machine)
-- Deprecated *(Reverse Proxy (Nginx) Load Balancing(RR))*
+- Raft based Leader Election
+- Leader Data Catch-up
+- Write Ahead Log is yet by list
+- Event Dispatcher and Interrupt Channel concept added
 
 ## Installation
 
